@@ -36,16 +36,16 @@ func GenerateKey(random io.Reader, bits int) (*PrivateKey, error) {
 			NSquared: new(big.Int).Mul(n, n),
 			G:        new(big.Int).Add(n, one), // g = n + 1
 		},
-		p:         p,
-		pp:        pp,
-		pminusone: new(big.Int).Sub(p, one),
-		q:         q,
-		qq:        qq,
-		qminusone: new(big.Int).Sub(q, one),
-		pinvq:     new(big.Int).ModInverse(p, q),
-		hp:        h(p, pp, n),
-		hq:        h(q, qq, n),
-		n:         n,
+		P:         p,
+		PP:        pp,
+		Pminusone: new(big.Int).Sub(p, one),
+		Q:         q,
+		QQ:        qq,
+		Qminusone: new(big.Int).Sub(q, one),
+		Pinvq:     new(big.Int).ModInverse(p, q),
+		HP:        h(p, pp, n),
+		HQ:        h(q, qq, n),
+		N:         n,
 	}, nil
 
 }
@@ -53,16 +53,16 @@ func GenerateKey(random io.Reader, bits int) (*PrivateKey, error) {
 // PrivateKey represents a Paillier key.
 type PrivateKey struct {
 	PublicKey
-	p         *big.Int
-	pp        *big.Int
-	pminusone *big.Int
-	q         *big.Int
-	qq        *big.Int
-	qminusone *big.Int
-	pinvq     *big.Int
-	hp        *big.Int
-	hq        *big.Int
-	n         *big.Int
+	P         *big.Int
+	PP        *big.Int
+	Pminusone *big.Int
+	Q         *big.Int
+	QQ        *big.Int
+	Qminusone *big.Int
+	Pinvq     *big.Int
+	HP        *big.Int
+	HQ        *big.Int
+	N         *big.Int
 }
 
 // PublicKey represents the public part of a Paillier key.
@@ -116,23 +116,23 @@ func Decrypt(privKey *PrivateKey, cipherText []byte) ([]byte, error) {
 		return nil, ErrMessageTooLong
 	}
 
-	cp := new(big.Int).Exp(c, privKey.pminusone, privKey.pp)
-	lp := l(cp, privKey.p)
-	mp := new(big.Int).Mod(new(big.Int).Mul(lp, privKey.hp), privKey.p)
-	cq := new(big.Int).Exp(c, privKey.qminusone, privKey.qq)
-	lq := l(cq, privKey.q)
+	cp := new(big.Int).Exp(c, privKey.Pminusone, privKey.PP)
+	lp := l(cp, privKey.P)
+	mp := new(big.Int).Mod(new(big.Int).Mul(lp, privKey.HP), privKey.P)
+	cq := new(big.Int).Exp(c, privKey.Qminusone, privKey.QQ)
+	lq := l(cq, privKey.Q)
 
-	mqq := new(big.Int).Mul(lq, privKey.hq)
-	mq := new(big.Int).Mod(mqq, privKey.q)
+	mqq := new(big.Int).Mul(lq, privKey.HQ)
+	mq := new(big.Int).Mod(mqq, privKey.Q)
 	m := crt(mp, mq, privKey)
 
 	return m.Bytes(), nil
 }
 
 func crt(mp *big.Int, mq *big.Int, privKey *PrivateKey) *big.Int {
-	u := new(big.Int).Mod(new(big.Int).Mul(new(big.Int).Sub(mq, mp), privKey.pinvq), privKey.q)
-	m := new(big.Int).Add(mp, new(big.Int).Mul(u, privKey.p))
-	return new(big.Int).Mod(m, privKey.n)
+	u := new(big.Int).Mod(new(big.Int).Mul(new(big.Int).Sub(mq, mp), privKey.Pinvq), privKey.Q)
+	m := new(big.Int).Add(mp, new(big.Int).Mul(u, privKey.P))
+	return new(big.Int).Mod(m, privKey.N)
 }
 
 // AddCipher homomorphically adds together two cipher texts.
